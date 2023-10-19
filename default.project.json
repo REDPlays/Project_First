@@ -1,0 +1,53 @@
+{
+  "name": "Project_First",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "RepFiles": {
+        "$className": "Folder",
+        "$path": "src/ReplicatedStorage"
+      }
+    },
+    "ServerStorage": {
+      "$className": "ServerStorage",
+      "RepFiles": {
+        "$className": "Folder",
+        "$path": "src/ServerStorage"
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "StartGuiScripts": {
+        "$className": "Folder",
+        "$path": "src/StarterGui"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "PlayerScripts": {
+        "$className": "Folder",
+        "$path": "src/StarterPlayer/PlayerScripts"
+      },
+      "StarterCharacterScripts": {
+        "$className": "StarterCharacterScripts",
+        "$path": "src/StarterCharacterScripts"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "GameFiles": {
+        "$className": "Folder",
+        "$path": "src/ServerScriptService"
+      }
+    },
+    "ReplicatedFirst": {
+      "$className": "ReplicatedFirst",
+      "GameFiles": {
+        "$className": "Folder",
+        "$path": "src/ReplicatedFirst"
+      }
+    }
+  }
+}
