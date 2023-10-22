@@ -9,6 +9,12 @@ ServerGameManager:Init()
 
 game.Players.PlayerAdded:Connect(function(player)
     player.CharacterAdded:Connect(function(character)
+        local animate = character:FindFirstChild("Animate")
+        if animate then
+            animate.Enabled = false
+            animate:Destroy()
+        end
+
         Events.ServerToClient.CharacterLoaded:FireClient(player)
     end)
 end)

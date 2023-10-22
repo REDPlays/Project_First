@@ -1,7 +1,12 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInput = game:GetService("UserInputService")
+local Debris = game:GetService("Debris")
 
 local Animations = ReplicatedStorage:WaitForChild("TestAnimations")
+
+local defaultFadeTime = 0.100000001
+local defaultWeight = 1
+local defaultSpeed = 1
 
 local MovementModule = {}
 MovementModule.__index = MovementModule
@@ -18,6 +23,7 @@ end
 function MovementModule:Init(character)
     self.character = character
     self.humanoid = self.character:WaitForChild("Humanoid")
+    self.animator = self.humanoid:WaitForChild("Animator")
     self.rootPart = self.character:WaitForChild("HumanoidRootPart")
 
     self.prevWalkSpeed = 0
@@ -25,20 +31,24 @@ function MovementModule:Init(character)
     self.sprint = false
     self.crouch = false
 
+    self.attach = Instance.new("Attachment")
+    self.attach.Parent = self.rootPart
+
     self:Setup()
     self:Connections()
 end
 
 function MovementModule:Setup()
     self.animations = {
-        ["Sprint"] = self.humanoid.Animator:LoadAnimation(Animations.Run),
-        ["Crouch"] = self.humanoid.Animator:LoadAnimation(Animations.Crouch),
-        ["CrouchWalk"] = self.humanoid.Animator:LoadAnimation(Animations.CrouchWalk),
+        ["Walk"] = self.animator:LoadAnimation(Animations.Walk),
+        ["Sprint"] = self.animator :LoadAnimation(Animations.Run),
+        ["Crouch"] = self.animator :LoadAnimation(Animations.Crouch),
+        ["CrouchWalk"] = self.animator :LoadAnimation(Animations.CrouchWalk),
     }
 end
 
 function MovementModule:Connections()
-    UserInput.InputBegan:Connect(function(input, gameProcessedEvent)
+    self.inputBegan = UserInput.InputBegan:Connect(function(input, gameProcessedEvent)
         if not gameProcessedEvent then
             --sprinting
             if input.KeyCode == Enum.KeyCode.LeftShift then
@@ -48,6 +58,10 @@ function MovementModule:Connections()
                     end
 
                     self.sprint = true
+
+                    if self.animations.Walk.IsPlaying then
+                        self.animations.Walk:Stop()
+                    end
 
                     self.animations.Sprint:Play()
 
@@ -59,6 +73,10 @@ function MovementModule:Connections()
             if input.KeyCode == Enum.KeyCode.C then
                 if not self.crouch then
                     self.crouch = true
+
+                    if self.animations.Walk.IsPlaying then
+                        self.animations.Walk:Stop()
+                    end
 
                     if self.animations.Sprint.IsPlaying then
                         self.animations.Sprint:Stop()
@@ -90,7 +108,7 @@ function MovementModule:Connections()
         end
     end)
 
-    UserInput.InputEnded:Connect(function(input, gameProcessedEvent)
+    self.inputEnded = UserInput.InputEnded:Connect(function(input, gameProcessedEvent)
         if not gameProcessedEvent then
             --sprinting
             if input.KeyCode == Enum.KeyCode.LeftShift then
@@ -111,12 +129,52 @@ function MovementModule:Connections()
     end)
 end
 
+function MovementModule:CombatMovement(toggle)
+    if not self.attach then
+        return
+    end
+
+    if toggle then
+        self.prevWalkSpeed = self.humanoid.WalkSpeed
+        self.humanoid.WalkSpeed = 0
+
+        local vel = Instance.new("LinearVelocity")
+        vel.Attachment0 = self.attach
+        vel.MaxForce = 1e5
+        vel.Enabled = true
+        vel.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
+        vel.VectorVelocity = Vector3.new(0, 0, -15)
+        vel.Parent = self.attach
+        
+        Debris:AddItem(vel, .1)
+    else
+        self.humanoid.WalkSpeed = self.prevWalkSpeed
+        self.prevWalkSpeed = 0
+    end
+end
+
+function MovementModule:Disconnect()
+    if self.inputBegan then
+        self.inputBegan:Disconnect()
+        self.inputBegan = nil
+    end
+
+    if self.inputEnded then
+        self.inputEnded:Disconnect()
+        self.inputEnded = nil
+    end
+end
+
 function MovementModule:Update(deltaTime)
     if self.humanoid then
         local moveDir = self.humanoid.MoveDirection.Magnitude
         
         --little to no movement
         if moveDir <= .5 then
+            if self.animations.Walk.IsPlaying and not self.sprint and not self.crouch then
+                self.animations.Walk:Stop()
+            end
+
             if self.animations.Sprint.IsPlaying and self.sprint and not self.crouch then
                 self.animations.Sprint:Stop()
             end
@@ -125,6 +183,10 @@ function MovementModule:Update(deltaTime)
                 self.animations.CrouchWalk:Stop()
             end
         elseif moveDir > .5 then
+            if not self.animations.Walk.IsPlaying and not self.sprint and not self.crouch then
+                self.animations.Walk:Play()
+            end
+
             if not self.animations.Sprint.IsPlaying and self.sprint and not self.crouch then
                 self.animations.Sprint:Play()
             end
