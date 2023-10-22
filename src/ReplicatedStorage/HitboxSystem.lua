@@ -2,6 +2,10 @@ local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local Events = ReplicatedStorage:WaitForChild("Events")
+
+local VisualConstants = require(ReplicatedStorage.RepFiles.Constants.VisualConstants)
+
 local HitboxSystem = {}
 HitboxSystem.hitboxColor = Color3.fromRGB(255, 255, 255)
 
@@ -16,7 +20,7 @@ function HitboxSystem:ShowHitbox(spawnCFrame, size)
     box.Size = size
     box.Color = HitboxSystem.hitboxColor
     box.Material = Enum.Material.ForceField
-    box.Transparency = .75
+    box.Transparency = 1
     box.CFrame = spawnCFrame
     box.Anchored = true
     box.CanCollide = false
@@ -29,7 +33,7 @@ function HitboxSystem:ShowHitbox(spawnCFrame, size)
     return box
 end
 
-function HitboxSystem:CreateBox(character, spawnCFrame, size, damage)
+function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence)
     damage = damage or 10
 
     local box = HitboxSystem:ShowHitbox(spawnCFrame, size)
@@ -64,24 +68,24 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage)
         end
 
         if RunService:IsClient() then
-            warn("play vfx")
             local plrVector = Vector3.new(character.HumanoidRootPart.Position.X, rootPart.Position.Y, character.HumanoidRootPart.Position.Z)
             rootPart.CFrame = CFrame.new(rootPart.Position, plrVector)
 
-            --HitboxSystem:SmallKnockBack(rootPart)
+            HitboxSystem:SmallKnockBack(rootPart, sequence)
 
         elseif RunService:IsServer() then
-            warn("damage", parent.Name)
-            humanoid:TakeDamage(damage)
+            local sequenceLength = string.len(sequence)
 
-            HitboxSystem:SmallKnockBack(rootPart)
+            Events.ServerToClient.VFX:FireAllClients(VisualConstants.Melee, character, parent, {sequenceLength = sequenceLength})
+
+            humanoid:TakeDamage(damage)
         end
 
         return
     end
 end
 
-function HitboxSystem:SmallKnockBack(rootPart)
+function HitboxSystem:SmallKnockBack(rootPart, sequence)
     local attach = Instance.new("Attachment")
     attach.Parent = rootPart
 
@@ -90,10 +94,15 @@ function HitboxSystem:SmallKnockBack(rootPart)
 	vel.MaxForce = 1e5
 	vel.Enabled = true
 	vel.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
-	vel.VectorVelocity = Vector3.new(0, 0, 15)
+
+    if string.len(sequence) < 5 then
+        vel.VectorVelocity = Vector3.new(0, 0, 20)
+    else
+        vel.VectorVelocity = Vector3.new(0, 0, 35)
+    end
 	vel.Parent = rootPart
 
-   Debris:AddItem(vel, .1)
+    Debris:AddItem(vel, .1)
     Debris:AddItem(attach, .1)
 end
 

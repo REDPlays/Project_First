@@ -1,7 +1,14 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInput = game:GetService("UserInputService")
+local Debris = game:GetService("Debris")
 
 local Events = ReplicatedStorage:WaitForChild("Events")
+
+local Assets = ReplicatedStorage:WaitForChild("Assets")
+local Misc = Assets:WaitForChild("Misc")
+local Sounds = Assets:WaitForChild("Sounds")
+local CombatSounds = Sounds:WaitForChild("Combat")
+local MeleeSounds = CombatSounds:WaitForChild("Melee")
 
 local HitboxSystem = require(ReplicatedStorage.RepFiles.HitboxSystem)
 
@@ -38,6 +45,19 @@ function ClientCombatSystem:Setup()
     self.prevTime = 0
 end
 
+function ClientCombatSystem:GetSound()
+    --function for getting the type/style of combat being used i.e, fist, swords, shields, etc.
+    local soundHolder = Misc.SoundHolder:Clone()
+    soundHolder.CFrame = self.rootPart.CFrame
+    soundHolder.Parent = workspace.VFX
+
+    local swingSFX = MeleeSounds.Swing:Clone()
+    swingSFX.Parent = soundHolder
+    swingSFX:Play()
+
+    Debris:AddItem(soundHolder, 1)
+end
+
 function ClientCombatSystem:Connections()
     self.inputBegan = UserInput.InputBegan:Connect(function(input, gameProcessedEvent)
         if not gameProcessedEvent then
@@ -62,10 +82,13 @@ function ClientCombatSystem:Connections()
                 if canAction then
                     local animInfo = self.animationSystem:Play(self.sequence, Enum.AnimationPriority.Action)
 
+                    --swinging sound fx
+                    self:GetSound()
+
                     self.movementSystem:CombatMovement(true)
 
                     task.delay(animInfo.hitboxDelay, function()
-                        HitboxSystem:CreateBox(self.character, self.rootPart.CFrame * CFrame.new(0, 0, -2), Vector3.new(4, 6, 4))
+                        HitboxSystem:CreateBox(self.character, self.rootPart.CFrame * CFrame.new(0, 0, -2), Vector3.new(4, 6, 4), nil, self.sequence)
                     end)
 
                     task.delay(animInfo.length * .8, function()

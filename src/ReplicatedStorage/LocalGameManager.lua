@@ -3,6 +3,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MovementModule = require(ReplicatedStorage.RepFiles.Character.MovementModule)
 local AnimationSystem = require(ReplicatedStorage.RepFiles.Character.AnimationSystem)
 local ClientCombatSystem = require(ReplicatedStorage.RepFiles.Character.ClientCombatSystem)
+local VisualEffectsManager = require(ReplicatedStorage.RepFiles.VisualEffects.VisualEffectsManager)
 
 local LocalGameManager = {}
 LocalGameManager.isLoaded = false
@@ -49,6 +50,8 @@ function LocalGameManager:Heartbeat(deltaTime)
         LocalGameManager.isLoaded = false
         return
     end
+
+    VisualEffectsManager:Update(deltaTime)
 
     if LocalGameManager.movement then
         LocalGameManager.movement:Update(deltaTime)

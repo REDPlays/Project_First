@@ -1,3 +1,4 @@
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Events = ReplicatedStorage:WaitForChild("Events")
 local KeyProvider = game:GetService("KeyframeSequenceProvider")
@@ -35,12 +36,16 @@ function ServerCombatSystem:Action(player, sequence)
 
     --hitboxLogic
     task.delay(animationData.hitboxDelay, function()
-        HitboxSystem:CreateBox(character, rootPart.CFrame * CFrame.new(0, 0, -2), Vector3.new(4, 6, 4))
+        HitboxSystem:CreateBox(character, rootPart.CFrame * CFrame.new(0, 0, -2), Vector3.new(4, 6, 4), nil, sequence)
     end)
 
     --cooldown
     task.delay(animationData.length * .8, function()
         ServerCombatSystem.inCooldown[player.UserId] = nil
+
+        if not Players:FindFirstChild(player.Name) then
+            return
+        end
 
         Events.ClientToServer.Combat:InvokeClient(player)
     end)
