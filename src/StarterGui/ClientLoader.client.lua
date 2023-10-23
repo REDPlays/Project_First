@@ -7,7 +7,7 @@ local Events = ReplicatedStorage:WaitForChild("Events")
 local LocalGameManager = require(ReplicatedStorage.RepFiles.LocalGameManager)
 
 local function CharacterLoaded()
-    LocalGameManager:Init(Players.LocalPlayer.Character)
+    LocalGameManager:Init(Players.LocalPlayer)
 
     RunService.Heartbeat:Connect(function(deltaTime)
         LocalGameManager:Heartbeat(deltaTime)

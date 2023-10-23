@@ -59,7 +59,27 @@ function Melee:Normal(folder, targetRoot)
 end
 
 function Melee:Empowered(folder, targetRoot)
-    
+    local HitEffects = MeleeVFX.HitEffects2:Clone()
+    HitEffects.Transparency = 1
+    HitEffects.CFrame = targetRoot.CFrame
+    HitEffects.Parent = folder
+
+    local weld = Instance.new("WeldConstraint")
+    weld.Part0 = HitEffects
+    weld.Part1 = targetRoot
+    weld.Parent = weld.Part0
+
+    local randomPitch = math.random(100, 110)/100
+
+    local sfx = MeleeSounds.Punch:Clone()
+    sfx.PitchShift.Octave = randomPitch
+    sfx.Volume = .75
+    sfx.Parent = HitEffects
+    sfx:Play()
+
+    HitEffects.Attachment.Ring:Emit(2)
+    HitEffects.Attachment.Spheres:Emit(16)
+    HitEffects.Attachment.Stars:Emit(3)
 end
 
 return Melee

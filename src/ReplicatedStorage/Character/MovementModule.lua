@@ -30,6 +30,7 @@ function MovementModule:Init(character)
 
     self.sprint = false
     self.crouch = false
+    self.attack = false
 
     self.attach = Instance.new("Attachment")
     self.attach.Parent = self.rootPart
@@ -50,6 +51,9 @@ end
 function MovementModule:Connections()
     self.inputBegan = UserInput.InputBegan:Connect(function(input, gameProcessedEvent)
         if not gameProcessedEvent then
+            if self.attack then
+                return
+            end
             --sprinting
             if input.KeyCode == Enum.KeyCode.LeftShift then
                 if not self.sprint then
@@ -135,6 +139,27 @@ function MovementModule:CombatMovement(toggle)
     end
 
     if toggle then
+        if self.sprint then
+            self.sprint = false
+            self.animations.Sprint:Stop()
+            self.humanoid.WalkSpeed = self.prevWalkSpeed
+            self.prevWalkSpeed = 0
+        end
+
+        if self.crouch then
+            self.crouch = false
+
+            if self.animations.CrouchWalk.IsPlaying then
+                self.animations.CrouchWalk:Stop()
+            end
+
+            self.animations.Crouch:Stop()
+            self.humanoid.WalkSpeed = self.prevWalkSpeed
+            self.prevWalkSpeed = 0
+        end
+
+        self.attack = true
+
         self.prevWalkSpeed = self.humanoid.WalkSpeed
         self.humanoid.WalkSpeed = 0
 
@@ -148,6 +173,8 @@ function MovementModule:CombatMovement(toggle)
         
         Debris:AddItem(vel, .1)
     else
+        self.attack = false
+
         self.humanoid.WalkSpeed = self.prevWalkSpeed
         self.prevWalkSpeed = 0
     end

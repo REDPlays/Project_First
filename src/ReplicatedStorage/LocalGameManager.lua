@@ -4,12 +4,14 @@ local MovementModule = require(ReplicatedStorage.RepFiles.Character.MovementModu
 local AnimationSystem = require(ReplicatedStorage.RepFiles.Character.AnimationSystem)
 local ClientCombatSystem = require(ReplicatedStorage.RepFiles.Character.ClientCombatSystem)
 local VisualEffectsManager = require(ReplicatedStorage.RepFiles.VisualEffects.VisualEffectsManager)
+local CameraManager = require(ReplicatedStorage.RepFiles.Character.CameraManager)
 
 local LocalGameManager = {}
 LocalGameManager.isLoaded = false
 
-function LocalGameManager:Init(character)
-    LocalGameManager.character = character
+function LocalGameManager:Init(player)
+    LocalGameManager.player = player
+    LocalGameManager.character = LocalGameManager.player.Character
     LocalGameManager.humanoid = LocalGameManager.character:WaitForChild("Humanoid")
 
     LocalGameManager:Setup()
@@ -27,6 +29,9 @@ function LocalGameManager:Setup()
 
     LocalGameManager.combatSystem = ClientCombatSystem.new()
     LocalGameManager.combatSystem:Init(LocalGameManager.character, LocalGameManager.animationSystem, LocalGameManager.movement)
+
+    LocalGameManager.cameraSystem = CameraManager.new()
+    LocalGameManager.cameraSystem:Init(LocalGameManager.player)
 end
 
 function LocalGameManager:Heartbeat(deltaTime)
@@ -63,6 +68,10 @@ function LocalGameManager:Heartbeat(deltaTime)
 
     if LocalGameManager.combatSystem then
         LocalGameManager.combatSystem:Update(deltaTime)
+    end
+
+    if  LocalGameManager.cameraSystem then
+        LocalGameManager.cameraSystem:Update(deltaTime)
     end
 end
 

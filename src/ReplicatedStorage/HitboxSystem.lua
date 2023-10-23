@@ -98,7 +98,7 @@ function HitboxSystem:SmallKnockBack(rootPart, sequence)
     if string.len(sequence) < 5 then
         vel.VectorVelocity = Vector3.new(0, 0, 20)
     else
-        vel.VectorVelocity = Vector3.new(0, 0, 35)
+        vel.VectorVelocity = Vector3.new(0, 0, 40)
     end
 	vel.Parent = rootPart
 
