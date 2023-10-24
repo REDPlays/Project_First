@@ -2,23 +2,29 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Events = ReplicatedStorage:WaitForChild("Events")
 local KeyProvider = game:GetService("KeyframeSequenceProvider")
+local ServerStorage = game:GetService("ServerStorage")
 
 local AnimationConstants = require(ReplicatedStorage.RepFiles.Constants.AnimationConstants)
 
 local HitboxSystem = require(ReplicatedStorage.RepFiles.HitboxSystem)
+
+local ServerStates = require(ServerStorage.RepFiles.Character.ServerStates)
 
 local ServerCombatSystem = {}
 ServerCombatSystem.inCooldown = {}
 ServerCombatSystem.cache = {}
 
 local function checkCooldown(player, sequence)
+    if ServerStates.Stunned[player.Character] then
+        return {value = false, reason = "stunned"}
+    end
     if ServerCombatSystem.inCooldown[player.UserId] then
-        return false
+        return {value = false, reason = "cooldown"}
     end
 
     ServerCombatSystem:Action(player, sequence)
 
-    return true
+    return {value = true, reason = "none"}
 end
 
 function ServerCombatSystem:Action(player, sequence)

@@ -1,18 +1,28 @@
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local Events = ReplicatedStorage:WaitForChild("Events")
 
 local VisualConstants = require(ReplicatedStorage.RepFiles.Constants.VisualConstants)
 
+local ServerStorage
+local ServerStates
+
+local DebugSettings = require(ReplicatedStorage.RepFiles.DebugSettings)
+
 local HitboxSystem = {}
 HitboxSystem.hitboxColor = Color3.fromRGB(255, 255, 255)
+HitboxSystem.stunLength = 5
 
 if RunService:IsClient() then
     HitboxSystem.hitboxColor = Color3.fromRGB(0, 0, 255)
 elseif RunService:IsServer() then
     HitboxSystem.hitboxColor = Color3.fromRGB(255, 0, 0)
+
+    ServerStorage = game:GetService("ServerStorage")
+    ServerStates = require(ServerStorage.RepFiles.Character.ServerStates)
 end
 
 function HitboxSystem:ShowHitbox(spawnCFrame, size)
@@ -78,6 +88,19 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence)
 
             Events.ServerToClient.VFX:FireAllClients(VisualConstants.Melee, character, parent, {sequenceLength = sequenceLength})
 
+            ServerStates:StunTarget(parent, HitboxSystem.stunLength)
+
+            local stunData = ServerStates.Stunned[parent]
+                if stunData then
+                    if stunData.stunCount > ServerStates.Settings.stunMax then
+                        local percentage = damage * (stunData.stunCount * ServerStates.Settings.stunDegrade) / 100
+                        damage  -= percentage
+                    end
+                end
+            --warn("damage:", damage)
+
+            damage = math.clamp(damage, 1, 100)
+            
             humanoid:TakeDamage(damage)
         end
 
@@ -98,7 +121,7 @@ function HitboxSystem:SmallKnockBack(rootPart, sequence)
     if string.len(sequence) < 5 then
         vel.VectorVelocity = Vector3.new(0, 0, 20)
     else
-        vel.VectorVelocity = Vector3.new(0, 0, 40)
+        vel.VectorVelocity = Vector3.new(0, 0, 60)
     end
 	vel.Parent = rootPart
 

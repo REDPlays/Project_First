@@ -79,7 +79,12 @@ function ClientCombatSystem:Connections()
                 end
 
                 local canAction = Events.ClientToServer.Combat:InvokeServer(self.sequence)
-                if canAction then
+                if not canAction then
+                    self.debounce = false
+                    return
+                end
+
+                if canAction.value == true then
                     local animInfo = self.animationSystem:Play(self.sequence, Enum.AnimationPriority.Action)
 
                     --swinging sound fx
@@ -94,9 +99,10 @@ function ClientCombatSystem:Connections()
                     task.delay(animInfo.length * .8, function()
                         self.movementSystem:CombatMovement(false)
                     end)
+                elseif canAction.value == false then
+                    warn("reason:", canAction.reason)
 
-                else
-                    warn("can't attack")
+                    self.debounce = false
                 end
             end
         end

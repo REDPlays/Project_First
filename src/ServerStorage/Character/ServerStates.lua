@@ -1,0 +1,106 @@
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DebugSettings = require(ReplicatedStorage.RepFiles.DebugSettings)
+
+local Assets = ReplicatedStorage:WaitForChild("Assets")
+local UI = Assets.UI
+
+local ServerStates = {}
+
+ServerStates.Stunned = {}
+ServerStates.Blocking = {}
+ServerStates.Rolling = {}
+
+ServerStates.Settings = {
+    stunMax = 5,
+    stunDegrade = 3,
+}
+
+--rounding helper
+local function floor(x)
+    return x - x % 1
+end
+
+function ServerStates:StunTarget(target: Model, duration)
+    if not target then
+        return
+    end
+
+    if not duration then
+        return
+    end
+
+    if ServerStates.Stunned[target] then
+        ServerStates.Stunned[target].currTime = 0
+        ServerStates.Stunned[target].duration = duration
+        ServerStates.Stunned[target].stunCount += 1
+
+        local currCount = ServerStates.Stunned[target].duration - ServerStates.Stunned[target].currTime
+        currCount = floor(currCount * (10^2)) / (10^2)
+
+        ServerStates.Stunned[target].UI.Background.Duration.Text = currCount
+        ServerStates.Stunned[target].UI.Background.Count.Text = ServerStates.Stunned[target].stunCount
+        return
+    end
+
+    local rootPart = target:FindFirstChild("HumanoidRootPart")
+    if not rootPart then
+        return
+    end
+
+    local stunAttach = Instance.new("Attachment")
+    stunAttach.Name = "stunAttach"
+    stunAttach.Parent = rootPart
+    stunAttach.CFrame = CFrame.new(0, 5, 0)
+
+    local infoUI = UI.StunCounter:Clone()
+    infoUI.Adornee = stunAttach
+    infoUI.Parent = target
+
+    ServerStates.Stunned[target] = {
+        target = target,
+        duration = duration,
+        currTime = 0,
+        stunCount = 1,
+        Attachment = stunAttach,
+        UI = infoUI
+    }
+
+    local currCount = ServerStates.Stunned[target].duration - ServerStates.Stunned[target].currTime
+    currCount = floor(currCount * (10^2)) / (10^2)
+
+    ServerStates.Stunned[target].UI.Background.Duration.Text = currCount
+    ServerStates.Stunned[target].UI.Background.Count.Text = ServerStates.Stunned[target].stunCount
+end
+
+function ServerStates:Update(deltaTime)
+    for targetId, data in pairs(ServerStates.Stunned) do
+        data.currTime += deltaTime
+
+        local currCount = data.duration - data.currTime
+        currCount = floor(currCount * (10^2)) / (10^2)
+
+        data.UI.Background.Duration.Text = currCount
+
+        if data.stunCount > ServerStates.Settings.stunMax then
+            data.UI.Background.Count.TextColor3 = Color3.fromRGB(255, 0, 0)
+        end
+
+        data.UI.Background.Count.Text = data.stunCount
+
+        if data.currTime >= data.duration then
+            if data.UI then
+                data.UI:Destroy()
+                data.UI = nil
+            end
+
+            if data.Attachment then
+                data.Attachment:Destroy()
+                data.Attachment = nil
+            end
+
+            ServerStates.Stunned[targetId] = nil
+        end
+    end
+end
+
+return ServerStates
