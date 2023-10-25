@@ -8,5 +8,6 @@ AnimationConstants["LL"] = Animations.Combat.Melee.M2
 AnimationConstants["LLL"] = Animations.Combat.Melee.M3
 AnimationConstants["LLLL"] = Animations.Combat.Melee.M4
 AnimationConstants["LLLLL"] = Animations.Combat.Melee.M5
+AnimationConstants["MeleeBlock"] = Animations.Combat.Melee.Block
 
 return AnimationConstants

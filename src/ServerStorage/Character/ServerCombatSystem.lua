@@ -27,6 +27,20 @@ local function checkCooldown(player, sequence)
     return {value = true, reason = "none"}
 end
 
+local function checkBlock(player, isActive)
+    if ServerStates.Stunned[player.Character] then
+        return {value = false, reason = "stunned"}
+    end
+
+    if ServerCombatSystem.inCooldown[player.UserId] then
+        return {value = false, reason = "cooldown"}
+    end
+
+    ServerCombatSystem:Block(player, isActive)
+
+    return
+end
+
 function ServerCombatSystem:Action(player, sequence)
     local character = player.Character
     local humanoid = character:FindFirstChild("Humanoid")
@@ -55,6 +69,20 @@ function ServerCombatSystem:Action(player, sequence)
 
         Events.ClientToServer.Combat:InvokeClient(player)
     end)
+end
+
+function ServerCombatSystem:Block(player, isActive)
+    local character = player.Character
+    local humanoid = character:FindFirstChild("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart")
+
+    if not humanoid or not rootPart then
+        return false
+    end
+
+    ServerCombatSystem.inCooldown[player.UserId] = true
+
+    ServerStates:Block(character, isActive)
 end
 
 function ServerCombatSystem:getAnimInfo(sequence)
@@ -93,5 +121,6 @@ function ServerCombatSystem:getAnimInfo(sequence)
 end
 
 Events.ClientToServer.Combat.OnServerInvoke = checkCooldown
+Events.ClientToServer.Block.OnServerInvoke = checkBlock
 
 return ServerCombatSystem

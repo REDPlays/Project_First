@@ -72,6 +72,30 @@ function ServerStates:StunTarget(target: Model, duration)
     ServerStates.Stunned[target].UI.Background.Count.Text = ServerStates.Stunned[target].stunCount
 end
 
+function ServerStates:Block(character: Model, isActive: boolean)
+    if not character then
+        return
+    end
+    
+    if isActive == true then
+        if ServerStates.Blocking[character] then
+            return
+        end
+
+        ServerStates.Blocking[character] = {
+            player = character,
+            blockHealth = 5,
+            blockTime = os.clock()
+        }
+    elseif isActive == false then
+        if not ServerStates.Blocking[character] then
+            return
+        end
+
+        ServerStates.Blocking[character] = nil
+    end
+end
+
 function ServerStates:Update(deltaTime)
     for targetId, data in pairs(ServerStates.Stunned) do
         data.currTime += deltaTime

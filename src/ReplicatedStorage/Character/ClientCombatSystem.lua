@@ -37,6 +37,7 @@ end
 
 function ClientCombatSystem:Setup()
     self.debounce = false
+    self.block = false
     self.cooldown = 1
 
     self.sequence = ""
@@ -63,6 +64,10 @@ function ClientCombatSystem:Connections()
         if not gameProcessedEvent then
             if input.UserInputType == Enum.UserInputType.MouseButton1 then
                 if self.debounce then
+                    return
+                end
+
+                if self.block then
                     return
                 end
 
@@ -103,6 +108,25 @@ function ClientCombatSystem:Connections()
                     warn("reason:", canAction.reason)
 
                     self.debounce = false
+                end
+            elseif input.KeyCode == Enum.KeyCode.F then
+                if self.debounce then
+                    return
+                end
+
+                if not self.block then
+                    self.block = true
+
+                    local canBlock = Events.ClientToServer.Block:InvokeServer(self.block)
+                    if canBlock.value == true then
+                        local animInfo = self.animationSystem:Play("MeleeBlock", Enum.AnimationPriority.Action)
+
+                        --movement system
+                        --self.movementSystem
+                    elseif canBlock.value == false then
+                        warn("reason:", canBlock.reason)
+                        self.block = false
+                    end
                 end
             end
         end
