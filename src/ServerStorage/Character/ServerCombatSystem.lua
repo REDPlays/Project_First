@@ -28,6 +28,12 @@ local function checkCooldown(player, sequence)
 end
 
 local function checkBlock(player, isActive)
+    --unblocking
+    if ServerStates.Blocking[player.Character] then
+        ServerCombatSystem:Block(player, isActive)
+        return {value = true, reason = "unblocking"}
+    end
+
     if ServerStates.Stunned[player.Character] then
         return {value = false, reason = "stunned"}
     end
@@ -38,7 +44,7 @@ local function checkBlock(player, isActive)
 
     ServerCombatSystem:Block(player, isActive)
 
-    return
+    return {value = true, reason = "none"}
 end
 
 function ServerCombatSystem:Action(player, sequence)
@@ -80,7 +86,15 @@ function ServerCombatSystem:Block(player, isActive)
         return false
     end
 
-    ServerCombatSystem.inCooldown[player.UserId] = true
+    if not ServerCombatSystem.inCooldown[player.UserId] then
+        ServerCombatSystem.inCooldown[player.UserId] = true
+    elseif ServerCombatSystem.inCooldown[player.UserId] then
+        task.delay(1, function()
+            ServerCombatSystem.inCooldown[player.UserId] = nil
+        end)
+    end
+
+    character:SetAttribute("Blocking", isActive)
 
     ServerStates:Block(character, isActive)
 end

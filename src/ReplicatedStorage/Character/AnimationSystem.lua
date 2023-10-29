@@ -107,8 +107,14 @@ function AnimationSystem:Pause()
     
 end
 
-function AnimationSystem:Stop()
-    
+function AnimationSystem:Stop(animationName, fadeTime)
+    if not self.currentAnimations[animationName] then
+        warn("invalid name")
+        return
+    end
+
+    self.currentAnimations[animationName]:Stop()
+    self.currentAnimations[animationName] = nil
 end
 
 function AnimationSystem:Update(deltaTime)

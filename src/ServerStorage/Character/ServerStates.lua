@@ -15,6 +15,15 @@ ServerStates.Settings = {
     stunDegrade = 3,
 }
 
+--debuging
+ServerStates.Blocking[workspace.Dummy] = {
+    player = workspace.Dummy,
+    blockHealth = 5,
+    blockTime = os.clock()
+}
+
+workspace.Dummy:SetAttribute("Blocking", true)
+
 --rounding helper
 local function floor(x)
     return x - x % 1
@@ -96,6 +105,25 @@ function ServerStates:Block(character: Model, isActive: boolean)
     end
 end
 
+function ServerStates:UpdateBlock(target: Model, damage)
+   if not target then
+        return
+   end 
+
+   if not ServerStates.Blocking[target] then
+        return
+   end
+
+   ServerStates.Blocking[target].blockHealth -= 1
+   local health = ServerStates.Blocking[target].blockHealth
+
+   if ServerStates.Blocking[target].blockHealth <= 0 then
+        ServerStates.Blocking[target] = nil
+   end
+
+   return health
+end
+
 function ServerStates:Update(deltaTime)
     for targetId, data in pairs(ServerStates.Stunned) do
         data.currTime += deltaTime
@@ -124,6 +152,10 @@ function ServerStates:Update(deltaTime)
 
             ServerStates.Stunned[targetId] = nil
         end
+    end
+
+    for targetId, data in pairs(ServerStates.Blocking) do
+        
     end
 end
 

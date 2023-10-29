@@ -1,4 +1,5 @@
 local Debris = game:GetService("Debris")
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
@@ -14,7 +15,8 @@ local DebugSettings = require(ReplicatedStorage.RepFiles.DebugSettings)
 
 local HitboxSystem = {}
 HitboxSystem.hitboxColor = Color3.fromRGB(255, 255, 255)
-HitboxSystem.stunLength = 5
+HitboxSystem.stunLength = 1
+HitboxSystem.blockBreakStunLength = 3
 
 if RunService:IsClient() then
     HitboxSystem.hitboxColor = Color3.fromRGB(0, 0, 255)
@@ -78,12 +80,24 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence)
         end
 
         if RunService:IsClient() then
+            if parent:GetAttribute("Blocking") then
+                return
+            end
+
             local plrVector = Vector3.new(character.HumanoidRootPart.Position.X, rootPart.Position.Y, character.HumanoidRootPart.Position.Z)
             rootPart.CFrame = CFrame.new(rootPart.Position, plrVector)
 
             HitboxSystem:SmallKnockBack(rootPart, sequence)
 
         elseif RunService:IsServer() then
+            if ServerStates.Blocking[parent] then
+                local blockHealth = ServerStates:UpdateBlock(parent, 1)
+                if blockHealth <= 0 then
+                    HitboxSystem:BlockBreak(parent)
+                end
+                return
+            end
+
             local sequenceLength = string.len(sequence)
 
             Events.ServerToClient.VFX:FireAllClients(VisualConstants.Melee, character, parent, {sequenceLength = sequenceLength})
@@ -127,6 +141,24 @@ function HitboxSystem:SmallKnockBack(rootPart, sequence)
 
     Debris:AddItem(vel, .1)
     Debris:AddItem(attach, .1)
+end
+
+function HitboxSystem:BlockBreak(target)
+    if not target then
+        return
+    end
+
+    target:SetAttribute("Blocking", false)
+
+    ServerStates:StunTarget(target, HitboxSystem.blockBreakStunLength)
+
+    local targetPlayer = Players:GetPlayerFromCharacter(target)
+    if targetPlayer then
+        Events.ClientToServer.Block:InvokeClient(targetPlayer)
+    end
+
+    --vfx somewhere
+    --Events.ServerToClient.VFX:FireAllClients(VisualConstants.Melee, character, parent, {sequenceLength = sequenceLength})
 end
 
 return HitboxSystem

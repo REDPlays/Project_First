@@ -116,18 +116,48 @@ function ClientCombatSystem:Connections()
 
                 if not self.block then
                     self.block = true
-
                     local canBlock = Events.ClientToServer.Block:InvokeServer(self.block)
+                    
                     if canBlock.value == true then
                         local animInfo = self.animationSystem:Play("MeleeBlock", Enum.AnimationPriority.Action)
 
                         --movement system
-                        --self.movementSystem
+                        self.movementSystem:BlockMovement(true)
                     elseif canBlock.value == false then
-                        warn("reason:", canBlock.reason)
                         self.block = false
                     end
+                elseif self.block then
+                    self.block = false
+                    local canBlock = Events.ClientToServer.Block:InvokeServer(self.block)
+                    
+                    if canBlock.value == true then
+                        self.animationSystem:Stop("MeleeBlock")
+                        --movement system
+                        self.movementSystem:BlockMovement(false)
+                    end
                 end
+            end
+        end
+    end)
+
+    self.inputEnded = UserInput.InputEnded:Connect(function(input, gameProcessedEvent)
+        if not gameProcessedEvent then
+            if input.KeyCode == Enum.KeyCode.F then
+                if self.debounce then
+                    return
+                end
+                --[==[
+                if self.block then
+                    self.block = false
+                    local canBlock = Events.ClientToServer.Block:InvokeServer(self.block)
+                    
+                    if canBlock.value == true then
+                        self.animationSystem:Stop("MeleeBlock")
+                        --movement system
+                        self.movementSystem:BlockMovement(false)
+                    end
+                end
+                ]==]
             end
         end
     end)
@@ -136,7 +166,12 @@ function ClientCombatSystem:Connections()
         self:runCoolDown()
     end
 
+    local function blockBreak()
+        self:blockBreak()
+    end
+
     Events.ClientToServer.Combat.OnClientInvoke = runCooldown
+    Events.ClientToServer.Block.OnClientInvoke = blockBreak
 end
 
 function ClientCombatSystem:Disconnect()
@@ -154,6 +189,15 @@ function ClientCombatSystem:runCoolDown()
         self.debounce = false
     else
         self.debounce = false
+    end
+end
+
+function ClientCombatSystem:blockBreak()
+    if self.block then
+        self.block = false
+        self.animationSystem:Stop("MeleeBlock")
+        --movement system
+        self.movementSystem:BlockMovement(false)
     end
 end
 
