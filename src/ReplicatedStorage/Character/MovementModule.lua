@@ -168,15 +168,27 @@ function MovementModule:CombatMovement(toggle)
         self.prevWalkSpeed = self.humanoid.WalkSpeed
         self.humanoid.WalkSpeed = 0
 
-        local vel = Instance.new("LinearVelocity")
-        vel.Attachment0 = self.attach
-        vel.MaxForce = 1e5
-        vel.Enabled = true
-        vel.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
-        vel.VectorVelocity = Vector3.new(0, 0, -15)
-        vel.Parent = self.attach
-        
-        Debris:AddItem(vel, .1)
+        --check for a box cast detection to see if they can move forward
+        local rayParams = RaycastParams.new()
+        rayParams.FilterDescendantsInstances = {self.character}
+
+        local spawnCfr = self.rootPart.CFrame
+        local size = Vector3.new(4, 5, 2)
+        local direction = self.rootPart.CFrame.LookVector
+        local distance = 3
+
+        local box = workspace:Blockcast(spawnCfr, size, direction * distance, rayParams)
+        if not box then
+            local vel = Instance.new("LinearVelocity")
+            vel.Attachment0 = self.attach
+            vel.MaxForce = 1e5
+            vel.Enabled = true
+            vel.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
+            vel.VectorVelocity = Vector3.new(0, 0, -15)
+            vel.Parent = self.attach
+            
+            Debris:AddItem(vel, .1)
+        end
     else
         self.attack = false
 
@@ -216,6 +228,38 @@ function MovementModule:BlockMovement(toggle)
         self.humanoid.WalkSpeed = self.prevWalkSpeed
         self.prevWalkSpeed = 0
     end
+end
+
+function MovementModule:BlockBreak(timing)
+    if self.sprint then
+        self.sprint = false
+        self.animations.Sprint:Stop()
+        self.humanoid.WalkSpeed = self.prevWalkSpeed
+        self.prevWalkSpeed = 0
+    end
+
+    if self.crouch then
+        self.crouch = false
+
+        if self.animations.CrouchWalk.IsPlaying then
+            self.animations.CrouchWalk:Stop()
+        end
+
+        self.animations.Crouch:Stop()
+        self.humanoid.WalkSpeed = self.prevWalkSpeed
+        self.prevWalkSpeed = 0
+    end
+
+    self.block = true
+    self.prevWalkSpeed = self.humanoid.WalkSpeed
+    self.humanoid.WalkSpeed = 0
+
+    task.delay(timing, function()
+        self.block = false
+
+        self.humanoid.WalkSpeed = self.prevWalkSpeed
+        self.prevWalkSpeed = 0
+    end)
 end
 
 function MovementModule:Disconnect()

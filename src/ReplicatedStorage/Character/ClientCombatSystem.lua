@@ -166,8 +166,8 @@ function ClientCombatSystem:Connections()
         self:runCoolDown()
     end
 
-    local function blockBreak()
-        self:blockBreak()
+    local function blockBreak(timing)
+        self:blockBreak(timing)
     end
 
     Events.ClientToServer.Combat.OnClientInvoke = runCooldown
@@ -192,12 +192,13 @@ function ClientCombatSystem:runCoolDown()
     end
 end
 
-function ClientCombatSystem:blockBreak()
+function ClientCombatSystem:blockBreak(timing)
     if self.block then
         self.block = false
         self.animationSystem:Stop("MeleeBlock")
         --movement system
         self.movementSystem:BlockMovement(false)
+        self.movementSystem:BlockBreak(timing)
     end
 end
 

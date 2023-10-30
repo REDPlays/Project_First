@@ -5,5 +5,7 @@ local VisualConstants = require(ReplicatedStorage.RepFiles.Constants.VisualConst
 local VisualEffectData = {}
 
 VisualEffectData[VisualConstants.Melee] = require(ReplicatedStorage:WaitForChild("RepFiles"):WaitForChild("VisualEffects"):WaitForChild("Melee"))
+VisualEffectData[VisualConstants.BlockBreak] = require(ReplicatedStorage:WaitForChild("RepFiles"):WaitForChild("VisualEffects"):WaitForChild("BlockBreak"))
+VisualEffectData[VisualConstants.Block] = require(ReplicatedStorage:WaitForChild("RepFiles"):WaitForChild("VisualEffects"):WaitForChild("Block"))
 
 return VisualEffectData

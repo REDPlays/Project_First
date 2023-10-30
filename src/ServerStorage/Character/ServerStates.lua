@@ -1,6 +1,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local DebugSettings = require(ReplicatedStorage.RepFiles.DebugSettings)
 
+local Animations = ReplicatedStorage:WaitForChild("TestAnimations")
+
 local Assets = ReplicatedStorage:WaitForChild("Assets")
 local UI = Assets.UI
 
@@ -16,13 +18,15 @@ ServerStates.Settings = {
 }
 
 --debuging
+local debugTimer = 5
 ServerStates.Blocking[workspace.Dummy] = {
     player = workspace.Dummy,
     blockHealth = 5,
     blockTime = os.clock()
 }
-
 workspace.Dummy:SetAttribute("Blocking", true)
+local blockAnim = workspace.Dummy.Humanoid.Animator:LoadAnimation(Animations.Combat.Melee.Block)
+blockAnim:Play()
 
 --rounding helper
 local function floor(x)
@@ -156,6 +160,28 @@ function ServerStates:Update(deltaTime)
 
     for targetId, data in pairs(ServerStates.Blocking) do
         
+    end
+
+    if ServerStates.Stunned[workspace.Dummy] then
+        if blockAnim.IsPlaying then
+            blockAnim:Stop()
+        end
+    end
+
+    if not workspace.Dummy:GetAttribute("Blocking") then
+        debugTimer -= deltaTime
+        if debugTimer <= 0 then
+            ServerStates.Blocking[workspace.Dummy] = {
+                player = workspace.Dummy,
+                blockHealth = 5,
+                blockTime = os.clock()
+            }
+            workspace.Dummy:SetAttribute("Blocking", true)
+
+            blockAnim:Play()
+
+            debugTimer = 5
+        end
     end
 end
 

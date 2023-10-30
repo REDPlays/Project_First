@@ -60,9 +60,17 @@ function ServerCombatSystem:Action(player, sequence)
 
     ServerCombatSystem.inCooldown[player.UserId] = true
 
+    local function callBackFunction(targetPlayer)
+        if ServerCombatSystem.inCooldown[targetPlayer.UserId] then
+            task.delay(1, function()
+                ServerCombatSystem.inCooldown[targetPlayer.UserId] = nil
+            end)
+        end
+    end
+
     --hitboxLogic
     task.delay(animationData.hitboxDelay, function()
-        HitboxSystem:CreateBox(character, rootPart.CFrame * CFrame.new(0, 0, -2), Vector3.new(4, 6, 4), nil, sequence)
+        HitboxSystem:CreateBox(character, rootPart.CFrame * CFrame.new(0, 0, -2), Vector3.new(4, 6, 4), nil, sequence, callBackFunction)
     end)
 
     --cooldown

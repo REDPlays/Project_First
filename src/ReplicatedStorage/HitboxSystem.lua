@@ -45,7 +45,7 @@ function HitboxSystem:ShowHitbox(spawnCFrame, size)
     return box
 end
 
-function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence)
+function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, callBackFunction)
     damage = damage or 10
 
     local box = HitboxSystem:ShowHitbox(spawnCFrame, size)
@@ -82,6 +82,9 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence)
         if RunService:IsClient() then
             if parent:GetAttribute("Blocking") then
                 return
+            else
+                local plrVector = Vector3.new(character.HumanoidRootPart.Position.X, rootPart.Position.Y, character.HumanoidRootPart.Position.Z)
+                rootPart.CFrame = CFrame.new(rootPart.Position, plrVector)
             end
 
             local plrVector = Vector3.new(character.HumanoidRootPart.Position.X, rootPart.Position.Y, character.HumanoidRootPart.Position.Z)
@@ -93,7 +96,9 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence)
             if ServerStates.Blocking[parent] then
                 local blockHealth = ServerStates:UpdateBlock(parent, 1)
                 if blockHealth <= 0 then
-                    HitboxSystem:BlockBreak(parent)
+                    HitboxSystem:BlockBreak(character, parent, callBackFunction)
+                else
+                    Events.ServerToClient.VFX:FireAllClients(VisualConstants.Block, character, parent, {})
                 end
                 return
             end
@@ -143,7 +148,7 @@ function HitboxSystem:SmallKnockBack(rootPart, sequence)
     Debris:AddItem(attach, .1)
 end
 
-function HitboxSystem:BlockBreak(target)
+function HitboxSystem:BlockBreak(character, target, callBackFunction)
     if not target then
         return
     end
@@ -154,11 +159,11 @@ function HitboxSystem:BlockBreak(target)
 
     local targetPlayer = Players:GetPlayerFromCharacter(target)
     if targetPlayer then
-        Events.ClientToServer.Block:InvokeClient(targetPlayer)
+        callBackFunction(targetPlayer)
+        Events.ClientToServer.Block:InvokeClient(targetPlayer, HitboxSystem.blockBreakStunLength)
     end
 
-    --vfx somewhere
-    --Events.ServerToClient.VFX:FireAllClients(VisualConstants.Melee, character, parent, {sequenceLength = sequenceLength})
+    Events.ServerToClient.VFX:FireAllClients(VisualConstants.BlockBreak, character, target, {})
 end
 
 return HitboxSystem
