@@ -47,7 +47,7 @@ function HitboxSystem:ShowHitbox(spawnCFrame, size)
 end
 
 function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, callBackFunction)
-    damage = damage or 10
+    damage = damage or .1 --10
 
     local box = HitboxSystem:ShowHitbox(spawnCFrame, size)
 
@@ -78,6 +78,11 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, 
         local rootPart = parent:FindFirstChild("HumanoidRootPart")
         if not rootPart then
             continue
+        end
+
+        --im stunned
+        if ServerStates.Stunned[character] then
+            return
         end
 
         if RunService:IsServer() then
@@ -118,7 +123,7 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, 
                 end
             --warn("damage:", damage)
 
-            damage = math.clamp(damage, 1, 100)
+            damage = math.clamp(damage, .1, 100) --1
             
             humanoid:TakeDamage(damage)
         end
