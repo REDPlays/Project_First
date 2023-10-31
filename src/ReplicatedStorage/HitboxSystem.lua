@@ -1,3 +1,4 @@
+local RunService = game:GetService("RunService")
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -79,20 +80,7 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, 
             continue
         end
 
-        if RunService:IsClient() then
-            if parent:GetAttribute("Blocking") then
-                return
-            else
-                local plrVector = Vector3.new(character.HumanoidRootPart.Position.X, rootPart.Position.Y, character.HumanoidRootPart.Position.Z)
-                rootPart.CFrame = CFrame.new(rootPart.Position, plrVector)
-            end
-
-            local plrVector = Vector3.new(character.HumanoidRootPart.Position.X, rootPart.Position.Y, character.HumanoidRootPart.Position.Z)
-            rootPart.CFrame = CFrame.new(rootPart.Position, plrVector)
-
-            HitboxSystem:SmallKnockBack(rootPart, sequence)
-
-        elseif RunService:IsServer() then
+        if RunService:IsServer() then
             if ServerStates.Blocking[parent] then
                 local blockHealth = ServerStates:UpdateBlock(parent, 1)
                 if blockHealth <= 0 then
@@ -103,9 +91,21 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, 
                 return
             end
 
+            humanoid.AutoRotate = false
+            task.delay(HitboxSystem.stunLength, function ()
+                humanoid.AutoRotate = true
+            end)
+
             local sequenceLength = string.len(sequence)
 
+            Events.ServerToClient.Knockback:FireAllClients(parent, character, sequence)
+
             Events.ServerToClient.VFX:FireAllClients(VisualConstants.Melee, character, parent, {sequenceLength = sequenceLength})
+
+            local targetPlayer = Players:GetPlayerFromCharacter(parent)
+            if targetPlayer then
+                Events.ServerToClient.Stun:FireClient(targetPlayer, HitboxSystem.stunLength)
+            end
 
             ServerStates:StunTarget(parent, HitboxSystem.stunLength)
 
@@ -164,6 +164,30 @@ function HitboxSystem:BlockBreak(character, target, callBackFunction)
     end
 
     Events.ServerToClient.VFX:FireAllClients(VisualConstants.BlockBreak, character, target, {})
+end
+
+local function SmallKnockBack(target, character, sequence)
+    if not target then
+        return
+    end
+
+    local rootPart = target:FindFirstChild("HumanoidRootPart")
+    if not rootPart then
+        return
+    end
+
+    if target:GetAttribute("Blocking") then
+        return
+    end
+
+    local plrVector = Vector3.new(character.HumanoidRootPart.Position.X, rootPart.Position.Y, character.HumanoidRootPart.Position.Z)
+    rootPart.CFrame = CFrame.new(rootPart.Position, plrVector)
+
+    HitboxSystem:SmallKnockBack(rootPart, sequence)
+end
+
+if RunService:IsClient() then
+    Events.ServerToClient.Knockback.OnClientEvent:Connect(SmallKnockBack)
 end
 
 return HitboxSystem

@@ -126,7 +126,7 @@ function ClientCombatSystem:Connections()
                     elseif canBlock.value == false then
                         self.block = false
                     end
-                elseif self.block then
+                --[==[elseif self.block then
                     self.block = false
                     local canBlock = Events.ClientToServer.Block:InvokeServer(self.block)
                     
@@ -134,7 +134,7 @@ function ClientCombatSystem:Connections()
                         self.animationSystem:Stop("MeleeBlock")
                         --movement system
                         self.movementSystem:BlockMovement(false)
-                    end
+                    end]==]
                 end
             end
         end
@@ -146,7 +146,7 @@ function ClientCombatSystem:Connections()
                 if self.debounce then
                     return
                 end
-                --[==[
+                
                 if self.block then
                     self.block = false
                     local canBlock = Events.ClientToServer.Block:InvokeServer(self.block)
@@ -157,7 +157,7 @@ function ClientCombatSystem:Connections()
                         self.movementSystem:BlockMovement(false)
                     end
                 end
-                ]==]
+                
             end
         end
     end)

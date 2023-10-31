@@ -70,7 +70,7 @@ function ServerCombatSystem:Action(player, sequence)
 
     --hitboxLogic
     task.delay(animationData.hitboxDelay, function()
-        HitboxSystem:CreateBox(character, rootPart.CFrame * CFrame.new(0, 0, -2), Vector3.new(4, 6, 4), nil, sequence, callBackFunction)
+        HitboxSystem:CreateBox(character, rootPart.CFrame * CFrame.new(0, 0, -2.5), Vector3.new(4, 6, 5), nil, sequence, callBackFunction)
     end)
 
     --cooldown

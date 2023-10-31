@@ -4,6 +4,8 @@ local Debris = game:GetService("Debris")
 
 local Animations = ReplicatedStorage:WaitForChild("TestAnimations")
 
+local Events = ReplicatedStorage:WaitForChild("Events")
+
 local defaultFadeTime = 0.100000001
 local defaultWeight = 1
 local defaultSpeed = 1
@@ -32,6 +34,7 @@ function MovementModule:Init(character)
     self.crouch = false
     self.attack = false
     self.block = false
+    self.stun = false
 
     self.attach = Instance.new("Attachment")
     self.attach.Parent = self.rootPart
@@ -57,6 +60,10 @@ function MovementModule:Connections()
             end
 
             if self.block then
+                return
+            end
+
+            if self.stun then
                 return
             end
             --sprinting
@@ -136,6 +143,12 @@ function MovementModule:Connections()
             end
         end
     end)
+
+    local function stunMovement(timing)
+        self:StunMovement(timing)
+    end
+
+    Events.ServerToClient.Stun.OnClientEvent:Connect(stunMovement)
 end
 
 function MovementModule:CombatMovement(toggle)
@@ -175,7 +188,7 @@ function MovementModule:CombatMovement(toggle)
         local spawnCfr = self.rootPart.CFrame
         local size = Vector3.new(4, 5, 2)
         local direction = self.rootPart.CFrame.LookVector
-        local distance = 3
+        local distance = 1
 
         local box = workspace:Blockcast(spawnCfr, size, direction * distance, rayParams)
         if not box then
@@ -256,6 +269,38 @@ function MovementModule:BlockBreak(timing)
 
     task.delay(timing, function()
         self.block = false
+
+        self.humanoid.WalkSpeed = self.prevWalkSpeed
+        self.prevWalkSpeed = 0
+    end)
+end
+
+function MovementModule:StunMovement(timing)
+    if self.sprint then
+        self.sprint = false
+        self.animations.Sprint:Stop()
+        self.humanoid.WalkSpeed = self.prevWalkSpeed
+        self.prevWalkSpeed = 0
+    end
+
+    if self.crouch then
+        self.crouch = false
+
+        if self.animations.CrouchWalk.IsPlaying then
+            self.animations.CrouchWalk:Stop()
+        end
+
+        self.animations.Crouch:Stop()
+        self.humanoid.WalkSpeed = self.prevWalkSpeed
+        self.prevWalkSpeed = 0
+    end
+
+    self.stun = true
+    self.prevWalkSpeed = self.humanoid.WalkSpeed
+    self.humanoid.WalkSpeed = 0
+
+    task.delay(timing, function()
+        self.stun = false
 
         self.humanoid.WalkSpeed = self.prevWalkSpeed
         self.prevWalkSpeed = 0

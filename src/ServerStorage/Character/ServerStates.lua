@@ -19,13 +19,13 @@ ServerStates.Settings = {
 
 --debuging
 local debugTimer = 5
-ServerStates.Blocking[workspace.Dummy] = {
+ServerStates.Blocking[workspace.BlockDummy] = {
     player = workspace.Dummy,
     blockHealth = 5,
     blockTime = os.clock()
 }
-workspace.Dummy:SetAttribute("Blocking", true)
-local blockAnim = workspace.Dummy.Humanoid.Animator:LoadAnimation(Animations.Combat.Melee.Block)
+workspace.BlockDummy:SetAttribute("Blocking", true)
+local blockAnim = workspace.BlockDummy.Humanoid.Animator:LoadAnimation(Animations.Combat.Melee.Block)
 blockAnim:Play()
 
 --rounding helper
@@ -162,21 +162,21 @@ function ServerStates:Update(deltaTime)
         
     end
 
-    if ServerStates.Stunned[workspace.Dummy] then
+    if ServerStates.Stunned[workspace.BlockDummy] then
         if blockAnim.IsPlaying then
             blockAnim:Stop()
         end
     end
 
-    if not workspace.Dummy:GetAttribute("Blocking") then
+    if not workspace.BlockDummy:GetAttribute("Blocking") then
         debugTimer -= deltaTime
         if debugTimer <= 0 then
-            ServerStates.Blocking[workspace.Dummy] = {
-                player = workspace.Dummy,
+            ServerStates.Blocking[workspace.BlockDummy] = {
+                player = workspace.BlockDummy,
                 blockHealth = 5,
                 blockTime = os.clock()
             }
-            workspace.Dummy:SetAttribute("Blocking", true)
+            workspace.BlockDummy:SetAttribute("Blocking", true)
 
             blockAnim:Play()
 
