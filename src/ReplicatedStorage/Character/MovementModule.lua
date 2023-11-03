@@ -276,6 +276,17 @@ function MovementModule:BlockBreak(timing)
 end
 
 function MovementModule:StunMovement(timing)
+    if self.stun then
+        self.stun = false
+
+        if self.delayTask then
+            task.cancel(self.delayTask)
+        end
+
+        self.humanoid.WalkSpeed = self.prevWalkSpeed
+        self.prevWalkSpeed = 0
+    end
+
     if self.sprint then
         self.sprint = false
         self.animations.Sprint:Stop()
@@ -299,7 +310,7 @@ function MovementModule:StunMovement(timing)
     self.prevWalkSpeed = self.humanoid.WalkSpeed
     self.humanoid.WalkSpeed = 0
 
-    task.delay(timing, function()
+    self.delayTask = task.delay(timing, function()
         self.stun = false
 
         self.humanoid.WalkSpeed = self.prevWalkSpeed

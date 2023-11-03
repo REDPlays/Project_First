@@ -2,7 +2,6 @@ local RunService = game:GetService("RunService")
 local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Events = ReplicatedStorage:WaitForChild("Events")
@@ -11,6 +10,7 @@ local VisualConstants = require(ReplicatedStorage.RepFiles.Constants.VisualConst
 
 local ServerStorage
 local ServerStates
+local knockbackThreads = {}
 
 local DebugSettings = require(ReplicatedStorage.RepFiles.DebugSettings)
 
@@ -80,12 +80,11 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, 
             continue
         end
 
-        --im stunned
-        if ServerStates.Stunned[character] then
-            return
-        end
-
-        if RunService:IsServer() then
+        if RunService:IsClient() then
+            if character:GetAttribute("Stunned") then
+                return
+            end
+        elseif RunService:IsServer() then
             if ServerStates.Blocking[parent] then
                 local blockHealth = ServerStates:UpdateBlock(parent, 1)
                 if blockHealth <= 0 then
@@ -96,6 +95,11 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, 
                 return
             end
 
+            --im stunned
+            if ServerStates.Stunned[character] then
+                return
+            end
+
             humanoid.AutoRotate = false
             task.delay(HitboxSystem.stunLength, function ()
                 humanoid.AutoRotate = true
@@ -103,7 +107,7 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, 
 
             local sequenceLength = string.len(sequence)
 
-            Events.ServerToClient.Knockback:FireAllClients(parent, character, sequence)
+            --Events.ServerToClient.Knockback:FireAllClients(parent, character, sequence)
 
             Events.ServerToClient.VFX:FireAllClients(VisualConstants.Melee, character, parent, {sequenceLength = sequenceLength})
 
@@ -143,7 +147,7 @@ function HitboxSystem:SmallKnockBack(rootPart, sequence)
 	vel.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
 
     if string.len(sequence) < 5 then
-        vel.VectorVelocity = Vector3.new(0, 0, 20)
+        vel.VectorVelocity = Vector3.new(0, 0, 15)
     else
         vel.VectorVelocity = Vector3.new(0, 0, 60)
     end
@@ -152,6 +156,7 @@ function HitboxSystem:SmallKnockBack(rootPart, sequence)
     Debris:AddItem(vel, .1)
     Debris:AddItem(attach, .1)
 end
+
 
 function HitboxSystem:BlockBreak(character, target, callBackFunction)
     if not target then
@@ -171,7 +176,7 @@ function HitboxSystem:BlockBreak(character, target, callBackFunction)
     Events.ServerToClient.VFX:FireAllClients(VisualConstants.BlockBreak, character, target, {})
 end
 
-local function SmallKnockBack(target, character, sequence)
+function SmallKnockBack(target, character, sequence)
     if not target then
         return
     end

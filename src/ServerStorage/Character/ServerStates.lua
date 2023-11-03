@@ -78,6 +78,8 @@ function ServerStates:StunTarget(target: Model, duration)
         UI = infoUI
     }
 
+    target:SetAttribute("Stunned", true)
+
     local currCount = ServerStates.Stunned[target].duration - ServerStates.Stunned[target].currTime
     currCount = floor(currCount * (10^2)) / (10^2)
 
@@ -155,6 +157,7 @@ function ServerStates:Update(deltaTime)
             end
 
             ServerStates.Stunned[targetId] = nil
+            data.target:SetAttribute("Stunned", false)
         end
     end
 

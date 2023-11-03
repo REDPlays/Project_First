@@ -105,7 +105,7 @@ function ClientCombatSystem:Connections()
                         self.movementSystem:CombatMovement(false)
                     end)
                 elseif canAction.value == false then
-                    warn("reason:", canAction.reason)
+                    --warn("reason:", canAction.reason)
 
                     self.debounce = false
                 end
