@@ -11,6 +11,7 @@ local ServerStates = {}
 ServerStates.Stunned = {}
 ServerStates.Blocking = {}
 ServerStates.Rolling = {}
+ServerStates.Untargetable = {}
 
 ServerStates.Settings = {
     stunMax = 5,
