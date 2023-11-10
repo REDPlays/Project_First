@@ -107,7 +107,7 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, 
 
             local sequenceLength = string.len(sequence)
 
-            --Events.ServerToClient.Knockback:FireAllClients(parent, character, sequence)
+            SmallKnockBack(parent, character, sequence)
 
             Events.ServerToClient.VFX:FireAllClients(VisualConstants.Melee, character, parent, {sequenceLength = sequenceLength})
 
@@ -136,25 +136,30 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, 
     end
 end
 
-function HitboxSystem:SmallKnockBack(rootPart, sequence)
-    local attach = Instance.new("Attachment")
-    attach.Parent = rootPart
+function HitboxSystem:SmallKnockBack(target, rootPart, sequence)
+    if knockbackThreads[target] then
+        knockbackThreads[target].currTime = 0
+        if string.len(sequence) < 5 then
+            knockbackThreads[target].speed = 1
+        else
+            knockbackThreads[target].speed = 2
+        end
+        return
+    end
 
-    local vel = Instance.new("LinearVelocity")
-	vel.Attachment0 = attach
-	vel.MaxForce = 1e5
-	vel.Enabled = true
-	vel.RelativeTo = Enum.ActuatorRelativeTo.Attachment0
+    knockbackThreads[target] = {
+        target = target,
+        rootPart = rootPart,
+        duration = .1,
+        currTime = 0,
+        speed = 0,
+    }
 
     if string.len(sequence) < 5 then
-        vel.VectorVelocity = Vector3.new(0, 0, 15)
+        knockbackThreads[target].speed = 20
     else
-        vel.VectorVelocity = Vector3.new(0, 0, 60)
+        knockbackThreads[target].speed = 50
     end
-	vel.Parent = rootPart
-
-    Debris:AddItem(vel, .1)
-    Debris:AddItem(attach, .1)
 end
 
 
@@ -193,11 +198,28 @@ function SmallKnockBack(target, character, sequence)
     local plrVector = Vector3.new(character.HumanoidRootPart.Position.X, rootPart.Position.Y, character.HumanoidRootPart.Position.Z)
     rootPart.CFrame = CFrame.new(rootPart.Position, plrVector)
 
-    HitboxSystem:SmallKnockBack(rootPart, sequence)
+    HitboxSystem:SmallKnockBack(target, rootPart, sequence)
 end
 
-if RunService:IsClient() then
-    Events.ServerToClient.Knockback.OnClientEvent:Connect(SmallKnockBack)
+if RunService:IsServer() then
+    RunService.Heartbeat:Connect(function(deltaTime)
+        for target, data in pairs(knockbackThreads) do
+            if not data.rootPart then
+                continue
+            end
+
+            if data.speed == 0 then
+                continue
+            end
+
+            data.currTime += deltaTime
+            if data.currTime >= data.duration then
+                knockbackThreads[target] = nil
+            end
+
+            data.rootPart.CFrame *= CFrame.new(0, 0, data.speed * deltaTime)
+        end
+    end)
 end
 
 return HitboxSystem
