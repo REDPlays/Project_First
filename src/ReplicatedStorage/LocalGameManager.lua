@@ -6,13 +6,22 @@ local ClientCombatSystem = require(ReplicatedStorage.RepFiles.Character.ClientCo
 local VisualEffectsManager = require(ReplicatedStorage.RepFiles.VisualEffects.VisualEffectsManager)
 local CameraManager = require(ReplicatedStorage.RepFiles.Character.CameraManager)
 
+local GuiController = require(ReplicatedStorage.RepFiles.UI.guiController)
+local DialogueNPC = require(ReplicatedStorage.RepFiles.NPCs.DialogueNPC_Client)
+
+
 local LocalGameManager = {}
 LocalGameManager.isLoaded = false
+
+LocalGameManager.dialogueNPCs = {}
 
 function LocalGameManager:Init(player)
     LocalGameManager.player = player
     LocalGameManager.character = LocalGameManager.player.Character
     LocalGameManager.humanoid = LocalGameManager.character:WaitForChild("Humanoid")
+
+    LocalGameManager.guiController = GuiController.new(player)
+    LocalGameManager.guiController:Init()
 
     LocalGameManager:Setup()
 end
@@ -32,6 +41,18 @@ function LocalGameManager:Setup()
 
     LocalGameManager.cameraSystem = CameraManager.new()
     LocalGameManager.cameraSystem:Init(LocalGameManager.player)
+end
+
+function LocalGameManager:RequestNPC(npcList)
+    for ID, npc in pairs(npcList) do
+        local newDialogue = DialogueNPC.new(npc)
+        newDialogue:Init()
+
+        LocalGameManager.dialogueNPCs[ID] = {
+            npc = npc,
+            dialogue = newDialogue
+        }
+    end
 end
 
 function LocalGameManager:Heartbeat(deltaTime)
@@ -54,6 +75,10 @@ function LocalGameManager:Heartbeat(deltaTime)
 
         LocalGameManager.isLoaded = false
         return
+    end
+
+    if LocalGameManager.guiController then
+        LocalGameManager.guiController:Update(deltaTime) 
     end
 
     VisualEffectsManager:Update(deltaTime)

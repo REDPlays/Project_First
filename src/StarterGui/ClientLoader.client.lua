@@ -9,6 +9,9 @@ local LocalGameManager = require(ReplicatedStorage.RepFiles.LocalGameManager)
 local function CharacterLoaded()
     LocalGameManager:Init(Players.LocalPlayer)
 
+    local npcList = Events.ClientToServer.RequestNPC:InvokeServer()
+    LocalGameManager:RequestNPC(npcList)
+
     RunService.Heartbeat:Connect(function(deltaTime)
         LocalGameManager:Heartbeat(deltaTime)
     end)

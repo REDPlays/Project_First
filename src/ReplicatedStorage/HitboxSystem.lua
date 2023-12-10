@@ -3,6 +3,7 @@ local Debris = game:GetService("Debris")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local CollectionService = game:GetService("CollectionService")
 
 local Events = ReplicatedStorage:WaitForChild("Events")
 
@@ -70,6 +71,11 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, 
             continue
         end
 
+        --ignore npcs
+        if CollectionService:HasTag(parent, "NPC") then
+            continue
+        end
+
         local humanoid = parent:FindFirstChild("Humanoid")
         if not humanoid then
             continue
@@ -116,7 +122,7 @@ function HitboxSystem:CreateBox(character, spawnCFrame, size, damage, sequence, 
                 Events.ServerToClient.Stun:FireClient(targetPlayer, HitboxSystem.stunLength)
             end
 
-            ServerStates:StunTarget(parent, HitboxSystem.stunLength)
+             ServerStates:StunTarget(parent, HitboxSystem.stunLength)
 
             local stunData = ServerStates.Stunned[parent]
                 if stunData then
