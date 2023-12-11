@@ -3,6 +3,8 @@ local Assets = ReplicatedStorage:WaitForChild("Assets")
 local UI = Assets:WaitForChild("UI")
 local InteractUI = UI:WaitForChild("Interact")
 
+local Events = ReplicatedStorage:WaitForChild("Events")
+
 local UIS = game:GetService("UserInputService")
 
 local DialogueNPC_Client = {}
@@ -43,7 +45,14 @@ function DialogueNPC_Client:Connections()
                     self.input = nil
                 end
 
-                warn("INTERACTION")
+                local npcID = self.npc:GetAttribute("ID")
+
+                local canInteract = Events.ClientToServer.RequestDialogue:InvokeServer(npcID)
+                if canInteract.interact then
+                    warn("User can speak to NPC")
+                else
+                    warn(canInteract.reason)
+                end
             end
         end)
     end)

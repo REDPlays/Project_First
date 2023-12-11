@@ -1,5 +1,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+local DialogueSystem = require(ReplicatedStorage.RepFiles.NPCs.DialogueSystem)
+
 local DialogueNPC = {}
 DialogueNPC.__index = DialogueNPC
 
@@ -20,6 +22,9 @@ function DialogueNPC:Init()
     self.proximity.Style = Enum.ProximityPromptStyle.Custom
     self.proximity.RequiresLineOfSight = false
     self.proximity.Parent = self.rootPart
+
+    self.dialogueSystem = DialogueSystem.new()
+    self.dialogueSystem:Init()
 end
 
 function DialogueNPC:Update(deltaTime)

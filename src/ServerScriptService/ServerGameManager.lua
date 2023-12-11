@@ -46,6 +46,25 @@ local function sendNPCs(player)
     return data
 end
 
+local function sendDialogue(player, npcID)
+    local info = {interact = false, reason = ""}
+
+    if not npcID then
+        info.reason = "NO NPC ID"
+        return info
+    end
+
+    if not ServerGameManager.dialogueNPCs[npcID] then
+        info.reason = "INVALID NPC"
+        return info
+    end
+
+    --get dialogue system
+    info.interact = true
+    return info
+end
+
 Events.ClientToServer.RequestNPC.OnServerInvoke = sendNPCs
+Events.ClientToServer.RequestDialogue.OnServerInvoke = sendDialogue
 
 return ServerGameManager
