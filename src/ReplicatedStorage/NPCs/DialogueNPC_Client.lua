@@ -5,7 +5,10 @@ local InteractUI = UI:WaitForChild("Interact")
 
 local Events = ReplicatedStorage:WaitForChild("Events")
 
+local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
+
+local DialogueController = require(ReplicatedStorage.RepFiles.UI.DialogueController)
 
 local DialogueNPC_Client = {}
 DialogueNPC_Client.__index = DialogueNPC_Client
@@ -19,8 +22,10 @@ function DialogueNPC_Client.new(npc: Model)
     return newNPC
 end
 
-function DialogueNPC_Client:Init()
+function DialogueNPC_Client:Init(player: Player)
+    self.player = player
     self.rootPart = self.npc:WaitForChild("HumanoidRootPart")
+    self.uniqueID = self.npc:GetAttribute("ID")
 
    self.proximity = self.rootPart:WaitForChild("ProximityPrompt")
 
@@ -28,8 +33,17 @@ function DialogueNPC_Client:Init()
    self.guiAttach.Name = "guiAttach"
    self.guiAttach.Parent = self.rootPart
    self.guiAttach.CFrame = CFrame.new(0, 3, 0)
+
+   self.dialogueController = DialogueController.new()
+   self.dialogueController:Init(self.player, self.uniqueID )
     
     self:Connections()
+end
+
+function DialogueNPC_Client:toggleVisible(bool)
+    if self.button then
+        self.button.Enabled = bool
+    end
 end
 
 function DialogueNPC_Client:Connections()
@@ -38,6 +52,8 @@ function DialogueNPC_Client:Connections()
         self.button .Adornee = self.guiAttach
         self.button.Parent = self.rootPart
 
+        local buttonBack = self.button.Background:FindFirstChild("Back")
+
         self.input = UIS.InputBegan:Connect(function(input)
             if input.KeyCode == Enum.KeyCode.E then
                 if self.input then
@@ -45,11 +61,18 @@ function DialogueNPC_Client:Connections()
                     self.input = nil
                 end
 
-                local npcID = self.npc:GetAttribute("ID")
+                local info = TweenInfo.new(.05, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, true)
+                TweenService:Create(buttonBack, info, {ImageTransparency = .75}):Play()
 
-                local canInteract = Events.ClientToServer.RequestDialogue:InvokeServer(npcID)
+                local canInteract = Events.ClientToServer.RequestDialogue:InvokeServer(self.uniqueID)
                 if canInteract.interact then
+                    task.delay(.1, function()
+                        self:toggleVisible(false)
+                    end)
+
                     warn("User can speak to NPC")
+                    local tier = 1 --add a random tier maker?
+                    self.dialogueController:PlayIn(tier)
                 else
                     warn(canInteract.reason)
                 end

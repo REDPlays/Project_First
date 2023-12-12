@@ -27,6 +27,10 @@ function DialogueNPC:Init()
     self.dialogueSystem:Init()
 end
 
+function DialogueNPC:GetBranch(tier)
+    return self.dialogueSystem.dialogueTree[tier]
+end
+
 function DialogueNPC:Update(deltaTime)
     
 end

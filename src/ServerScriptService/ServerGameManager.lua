@@ -64,7 +64,22 @@ local function sendDialogue(player, npcID)
     return info
 end
 
+local function getDialogue(player, npcID, tier)
+    if not npcID then
+        return
+    end
+    
+    if not ServerGameManager.dialogueNPCs[npcID] then
+        return
+    end
+    
+    tier = tier or 1
+   
+    return ServerGameManager.dialogueNPCs[npcID].dialogue:GetBranch(tier)
+end
+
 Events.ClientToServer.RequestNPC.OnServerInvoke = sendNPCs
 Events.ClientToServer.RequestDialogue.OnServerInvoke = sendDialogue
+Events.ClientToServer.DialogueBranch.OnServerInvoke = getDialogue
 
 return ServerGameManager

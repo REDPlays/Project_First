@@ -1,4 +1,5 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
 
 local MovementModule = require(ReplicatedStorage.RepFiles.Character.MovementModule)
 local AnimationSystem = require(ReplicatedStorage.RepFiles.Character.AnimationSystem)
@@ -46,7 +47,7 @@ end
 function LocalGameManager:RequestNPC(npcList)
     for ID, npc in pairs(npcList) do
         local newDialogue = DialogueNPC.new(npc)
-        newDialogue:Init()
+        newDialogue:Init(Players.LocalPlayer)
 
         LocalGameManager.dialogueNPCs[ID] = {
             npc = npc,
