@@ -30,7 +30,7 @@ local function createNPCs()
 end
 
 function ServerGameManager:Init()
-    createNPCs()
+    --createNPCs()
 end
 
 function ServerGameManager:Heartbeat(deltaTime)

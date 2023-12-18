@@ -8,7 +8,7 @@ local VisualEffectsManager = require(ReplicatedStorage.RepFiles.VisualEffects.Vi
 local CameraManager = require(ReplicatedStorage.RepFiles.Character.CameraManager)
 
 local GuiController = require(ReplicatedStorage.RepFiles.UI.guiController)
-local DialogueNPC = require(ReplicatedStorage.RepFiles.NPCs.DialogueNPC_Client)
+--local DialogueNPC = require(ReplicatedStorage.RepFiles.NPCs.DialogueNPC_Client)
 
 
 local LocalGameManager = {}
@@ -45,7 +45,7 @@ function LocalGameManager:Setup()
 end
 
 function LocalGameManager:RequestNPC(npcList)
-    for ID, npc in pairs(npcList) do
+   --[==[for ID, npc in pairs(npcList) do
         local newDialogue = DialogueNPC.new(npc)
         newDialogue:Init(Players.LocalPlayer)
 
@@ -53,7 +53,7 @@ function LocalGameManager:RequestNPC(npcList)
             npc = npc,
             dialogue = newDialogue
         }
-    end
+    end]==]
 end
 
 function LocalGameManager:Heartbeat(deltaTime)
